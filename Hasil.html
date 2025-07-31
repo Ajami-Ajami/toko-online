@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Toko Jami</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f9f9f9, #ffe6f0);
+      font-size: 16px;
+    }
+
+    header {
+      background: linear-gradient(to right, #ff69b4, #ff85a2);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .product {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      text-align: center;
+      padding: 16px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: fadeInUp 0.5s ease both;
+    }
+
+    .product:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .product img {
+      width: 100%;
+      height: 230px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .product h4 {
+      margin: 12px 0 6px;
+      font-size: 18px;
+    }
+
+    .product p {
+      margin: 0 0 10px;
+      font-size: 16px;
+      color: #555;
+    }
+
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .add-btn {
+      background: linear-gradient(to right, #28a745, #5cd67c);
+      color: white;
+    }
+
+    .cart-btn {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      background: #ff69b4;
+      color: white;
+      z-index: 11;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    #notif {
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      background: #28a745;
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      display: none;
+      z-index: 10;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; right: 0; }
+      to { opacity: 1; right: 20px; }
+    }
+
+    #cart-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 90%;
+      max-width: 420px;
+      height: 100%;
+      background: #fff;
+      padding: 20px;
+      display: none;
+      z-index: 20;
+      overflow-y: auto;
+      box-shadow: -2px 0 20px rgba(0,0,0,0.2);
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 8px;
+      background: #f8f8f8;
+      padding: 8px;
+      border-radius: 6px;
+    }
+
+    .remove-btn {
+      background: #dc3545;
+      color: white;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    form input, form textarea {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .checkout-btn {
+      background: #007bff;
+      color: white;
+      margin-top: 10px;
+    }
+
+    .back-btn {
+      background: #555;
+      color: white;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Toko Jami</h1>
+  </header>
+
+  <div id="notif"></div>
+
+  <button class="cart-btn" onclick="showCart()">🛒 Keranjang</button>
+
+  <div class="container" id="product-container"></div>
+
+  <div id="cart-panel">
+    <button class="back-btn" onclick="hideCart()">← Kembali</button>
+    <h3>Keranjang Belanja</h3>
+    <div id="cart-items"></div>
+    <p><strong>Total: Rp <span id="cart-total">0</span></strong></p>
+    <h4>Checkout</h4>
+    <form id="checkout-form" onsubmit="checkoutWA(event)">
+      <input type="text" id="nama" placeholder="Nama Lengkap" required />
+      <textarea id="alamat" placeholder="Alamat Lengkap" required></textarea>
+      <p><strong>Metode Pembayaran:</strong> COD</p>
+      <button class="checkout-btn" type="submit">Checkout via WhatsApp</button>
+    </form>
+  </div>
+
+  <script>
+    const produk = [
+      { nama: "Pensil", harga: 2000, gambar: "	https://i.pinimg.com/736x/44/b6/7d/44b67d466dc59d923fae9b10ef3085a6.jpg" },
+      { nama: "Pulpen", harga: 6000, gambar: "	https://i.pinimg.com/736x/80/93/53/809353ad8039c05c1f94e83639db7a8f.jpg" },
+      { nama: "Penghapus", harga: 1000, gambar: "	https://i.pinimg.com/736x/0e/4c/97/0e4c97bf07dd66f5c313e2231530446f.jpg" },
+      { nama: "Correction Tip X", harga: 15000, gambar: "https://i.pinimg.com/736x/52/63/9d/52639d0907baa851de165df44168dcf3.jpg" },
+      { nama: "Penggaris", harga: 5000, gambar: "	https://i.pinimg.com/736x/e2/68/67/e26867faf750e126269f68b335b36ab5.jpg" },
+      { nama: "Rautan", harga: 3000, gambar: "	https://i.pinimg.com/736x/ed/c3/8f/edc38fcbc4d5b58ce897e6c9cbf0db85.jpg" },
+      { nama: "Sticky Note 100 Lembar", harga: 5000, gambar: "https://i.pinimg.com/736x/c8/36/5d/c8365d04572ba3ee5f19ca1588108f17.jpg" }
+    ];
+
+    let keranjang = [];
+
+    function renderProduk() {
+      const container = document.getElementById("product-container");
+      container.innerHTML = "";
+      produk.forEach((p, i) => {
+        container.innerHTML += `
+          <div class="product">
+            <img src="${p.gambar}" alt="${p.nama}">
+            <h4>${p.nama}</h4>
+            <p>Rp ${p.harga.toLocaleString()}</p>
+            <button class="add-btn" onclick="tambahKeKeranjang(${i})">+ Keranjang</button>
+          </div>
+        `;
+      });
+    }
+
+    function tambahKeKeranjang(i) {
+      const item = produk[i];
+      const index = keranjang.findIndex(k => k.nama === item.nama);
+      if (index > -1) {
+        keranjang[index].jumlah++;
+      } else {
+        keranjang.push({ ...item, jumlah: 1 });
+      }
+      tampilNotif(`${item.nama} ditambahkan ke keranjang`);
+    }
+
+    function tampilNotif(text) {
+      const notif = document.getElementById("notif");
+      notif.innerText = text;
+      notif.style.display = "block";
+      setTimeout(() => notif.style.display = "none", 2000);
+    }
+
+    function showCart() {
+      document.getElementById("cart-panel").style.display = "block";
+      renderKeranjang();
+    }
+
+    function hideCart() {
+      document.getElementById("cart-panel").style.display = "none";
+    }
+
+    function renderKeranjang() {
+      const container = document.getElementById("cart-items");
+      const totalEl = document.getElementById("cart-total");
+      container.innerHTML = "";
+      let total = 0;
+
+      keranjang.forEach((item, i) => {
+        total += item.harga * item.jumlah;
+        container.innerHTML += `
+          <div class="cart-item">
+            <span>${item.nama} (${item.jumlah}x)</span>
+            <span>Rp ${(item.harga * item.jumlah).toLocaleString()}</span>
+            <button class="remove-btn" onclick="hapusItem(${i})">Hapus</button>
+          </div>
+        `;
+      });
+
+      totalEl.innerText = total.toLocaleString();
+    }
+
+    function hapusItem(i) {
+      keranjang.splice(i, 1);
+      renderKeranjang();
+    }
+
+    function checkoutWA(e) {
+      e.preventDefault();
+      const nama = document.getElementById("nama").value;
+      const alamat = document.getElementById("alamat").value;
+      if (keranjang.length === 0) return alert("Keranjang kosong!");
+
+      let pesan = `Halo, saya ${nama} ingin memesan:\n\n`;
+      let total = 0;
+      keranjang.forEach(item => {
+        pesan += `- ${item.nama} (${item.jumlah}x) - Rp ${(item.harga * item.jumlah).toLocaleString()}\n`;
+        total += item.harga * item.jumlah;
+      });
+      pesan += `\nAlamat: ${alamat}\nMetode: COD\nTotal: Rp ${total.toLocaleString()}`;
+      const url = `https://wa.me/6285212690525?text=${encodeURIComponent(pesan)}`;
+      window.open(url, "_blank");
+    }
+
+    renderProduk();
+  </script>
+</body>
+</html>
